@@ -17,6 +17,9 @@ async def create_employee(db,emp):
     if not dob_valid(emp['emp_dob']):
       logger.error(f"Input invalid DOB with id: {emp['emp_id']}")
       return False
+    if emp["emp_salary"]<0:
+      logger.error(f"Input invalid salary with id: {emp['emp_id']}")
+      return False
     await collections.insert_one(emp)
     logger.success("Employee Added successfully")
     return True
