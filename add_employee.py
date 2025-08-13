@@ -4,7 +4,6 @@ from load_employee import get_next_empId
 
 async def create_employee(db,emp):
   try:
-   
     collections=db["employee"]
     emp["emp_id"]= await get_next_empId(db)
     
