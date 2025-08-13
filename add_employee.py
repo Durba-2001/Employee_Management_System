@@ -7,10 +7,8 @@ async def create_employee(db,emp):
    
     collections=db["employee"]
     emp["emp_id"]= await get_next_empId(db)
-    existing= await collections.find_one({"emp_id":emp["emp_id"]})
-    if existing:
-      logger.error(f"Attempting to add already exists employee id: {emp['emp_id']}")
-      return False
+    
+    
     if not name_valid(emp["emp_name"]):
       logger.error(f"Input invalid name with id: {emp['emp_id']}")
       return False
