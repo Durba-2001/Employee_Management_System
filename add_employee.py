@@ -1,45 +1,27 @@
-import json 
-from load_employee import load_employee
-from validity import email_valid,dob_valid
+from validity import *
+from loguru import logger
+from load_employee import get_next_empId
 
-
-def add_employee(fp):
-    employees,file=load_employee(fp)
-    try:
-        emp_id=int(input("Enter the Employee Id:: "))
-        for e in employees:
-            if e["emp_id"]==emp_id:
-                print("Employee Already Exists")
-                return
-        name=input("Enter Employee Name:: ")
-        email=input("Enter Employee email:: ")
-        if not email_valid(email):
-            print("Invalid email Format!!")
-            return
-        salary=float(input("Enter Employee Salary:: "))
-        if salary<0:
-            print("Salary must be non negative")
-            return
-        address=input("Enter Employee address:: ")
-        dob= input("Enter employee date of birth:: ")
-        if not dob_valid(dob):
-            print("Invalid DOB Format!!")
-            return
-        department =input("Enter employee department:: ")
-        new_emp={
-            "emp_id":emp_id,
-            "name":name,
-            "email":email,
-            "salary":salary,
-            "address":address,
-            "dob":dob,
-            "department":department 
-        }
-        employees.append(new_emp)
-        with open(file,"w") as f:
-            json.dump(employees,f,indent=4)
-        print("New Employee added successfully!!")
-        return emp_id
-    except ValueError:
-        print("Invalid input. Please enter the correct values.")
-#add_employee()
+async def create_employee(db,emp):
+  try:
+   
+    collections=db["employee"]
+    emp["emp_id"]= await get_next_empId(db)
+    existing= await collections.find_one({"emp_id":emp["emp_id"]})
+    if existing:
+      logger.error(f"Attempting to add already exists employee id: {emp['emp_id']}")
+      return False
+    if not name_valid(emp["emp_name"]):
+      logger.error(f"Input invalid name with id: {emp['emp_id']}")
+      return False
+    if not email_valid(emp["emp_email"]):
+      logger.error(f"Input invalid email with id: {emp['emp_id']}")
+      return False
+    if not dob_valid(emp['emp_dob']):
+      logger.error(f"Input invalid DOB with id: {emp['emp_id']}")
+      return False
+    await collections.insert_one(emp)
+    logger.success("Employee Added successfully")
+    return True
+  except Exception as e:
+    logger.error(f"Error adding employee: {e}")

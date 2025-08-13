@@ -1,7 +1,10 @@
-import json
-from load_employee import load_employee
-def display(fp):
-    emp,_=load_employee(fp)
-    for e in emp:
-        print(json.dumps(e,indent=4))
-#display("employees.json")
+
+from loguru import logger
+async def displayAll(db):
+  
+  collections=db["employee"]
+  employees = []
+  logger.info("Displaying all employees")
+  async for emp in collections.find():  
+     employees.append(emp)
+  return employees

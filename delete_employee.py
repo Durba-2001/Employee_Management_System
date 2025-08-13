@@ -1,24 +1,20 @@
-import json
-from load_employee import load_employee
-def delete_employee(fp):
-    employees,file=load_employee(fp)
-    try:
-        emp_id=int(input("Enter the Employee ID to delete:: "))
-        for emp in employees:
-            if emp["emp_id"]==emp_id:
-                print("Employee Details:: ")
-                print(json.dumps(emp,indent=4))
-                confirm=input("Are you sure you want to delete this employee?(Y/N) ")
-                if confirm.upper()=="Y":
-                    employees.remove(emp)
-                    with open(file,"w") as f:
-                        json.dump(employees,f,indent=4)
-                    print("Employee deleted successfully!!")
-                    return
-                else:
-                    print("Deletion cancelled.")
-                    return
-        print("Employee with ID",emp_id,"not found.")
-    except ValueError:
-        print("Invalid input. Please enter the correct values.")
-#delete_employee()
+
+from loguru import logger
+async def delete_employee(db,emp_id):
+  try:
+   
+    collections=db["employee"] 
+    emp = await collections.find_one({"emp_id":emp_id})
+    if emp:
+      logger.info(f"Attempting to delete employee with id{emp_id}")
+      await collections.delete_one({"emp_id":emp_id})
+      logger.success(f"Employee with id {emp_id} deleted successfully")
+      return True
+    
+    else:
+      logger.error(f"Employee with id {emp_id} not found")
+      return False
+    
+  except Exception as e:
+    logger.error(f"Error deleting employee: {e}")
+    return False

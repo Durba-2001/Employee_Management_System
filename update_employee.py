@@ -1,56 +1,48 @@
-import json
-from load_employee import load_employee
-from validity import email_valid,dob_valid
-from menu import menu
-def update_employee(fp):
-    employees,file=load_employee(fp)
-    try:
-        emp_id=int(input("Enter Employee ID to update:: "))
-        for emp in employees:
-            if emp["emp_id"]==emp_id:
-                print("Current Employee Details:: ")
-                print(json.dumps(emp,indent=4))
-                ch=menu()
-                if ch == "8":
-                    print("Update cancelled.")
-                    return
-
-                choices = ch.split(",")
-
-                for i in choices:
-                    if i == "1" or i=="7":
-                        emp["name"] = input("Enter new name:: ")
-                    if i == "2" or i=="7":
-                        emp["email"] = input("Enter new email:: ")
-                        if not email_valid(emp["email"]):
-                            print("Invalid email Format!!")
-                            return
-                    if i == "3" or i=="7":
-                        emp["salary"] = float(input("Enter new salary:: "))
-                        if emp["salary"] < 0:
-                            print("Salary must be non negative")
-                            return
-                    if i == "4" or i=="7":
-                        emp["address"] = input("Enter new address:: ")
-                    if i == "5" or i=="7":
-                        emp["dob"] = input("Enter new DOB:: ")
-                        if not dob_valid(emp["dob"]):
-                            print("Invalid DOB Format!!")
-                            return
-                    if i == "6" or i=="7":
-                        emp["department"] = input("Enter new department:: ")
-                    if i<"1" or i>"8":
-                        print("Invalid choice:", i)
-                        return
-                print("After updating Employee Details:: ")
-                print(json.dumps(emp,indent=4))
-                with open(file, "w") as f:
-                    json.dump(employees, f, indent=4)
-                print("Employee details updated successfully!!")
-                return
-
-        print("Employee with ID", emp_id, "not found.")
-
-    except ValueError:
-        print("Invalid input. Please enter the correct values.")
-#update_employee()
+from validity import *
+from loguru import logger
+async def update_employee(db,emp_id,update_data):
+  try:
+    
+    collections=db["employee"]
+    emp=await collections.find_one({"emp_id":emp_id})
+    if emp:
+      logger.info(f"Attempting to update employee with id {emp_id}")
+      for key,value in update_data.items():
+        if key=="emp_name":
+          if not name_valid(value):
+            logger.error(f"Invalid Name with Id {emp_id}")
+            return False
+          await collections.update_one({"emp_id":emp_id},{"$set":{"emp_name":value}})
+          logger.success(f"Updating name for employee with id {emp_id}")
+        if key=="emp_email":
+          if not email_valid(value):
+            logger.error(f"Invalid Email with Id {emp_id}")
+            return False
+          await collections.update_one({"emp_id":emp_id},{"$set":{"emp_email":value}})
+          logger.success(f"Updating email for employee with id {emp_id}")
+        if key=="emp_salary":
+          salary=float(value)
+          if salary<0:
+            logger.error(f"Negative Salary entered during update for employee with Id {emp_id}")
+            return False
+          await collections.update_one({"emp_id":emp_id},{"$set":{"emp_salary":salary}})
+          logger.success(f"Updating salary for employee with id {emp_id}")
+        if key=="emp_address":
+          await collections.update_one({"emp_id":emp_id},{"$set":{"emp_address":value}})
+          logger.success(f"Updating address for employee with id {emp_id}")
+        if key=="emp_dob":
+          if not dob_valid(value):
+            logger.error(f"Invalid DOB with Id {emp_id}")
+            return False
+          await collections.update_one({"emp_id":emp_id},{"$set":{"emp_dob":value}})
+          logger.success(f"Updating dob for employee with id {emp_id}")
+        if key=="emp_department":
+          await collections.update_one({"emp_id":emp_id},{"$set":{"emp_department":value}})
+          logger.success(f"Updating department for employee with id {emp_id}")
+      logger.success(f"Employee with id {emp_id} updated successfully")
+      return True
+    logger.error(f"Employee with id {emp_id} not found")
+    return False
+  except Exception as e:
+    logger.error(f"Error updating employee: {e}")
+    return False
