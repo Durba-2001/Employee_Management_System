@@ -4,8 +4,7 @@ from dotenv import load_dotenv,find_dotenv
 from validity import*
 import os
 async def get_next_empId(db):
-  counter = await db.counters.find_one_and_update({"_id": "emp_id"}, {"$inc": {"sequence_value": 1}},
-        
+  counter = await db.counters.find_one_and_update({"_id": "emp_id"}, {"$inc": {"sequence_value": 1}},  
       upsert=True,   # Create the counter if it doesn't exist 
       return_document=True,  ) # Return the updated document        
   return counter["sequence_value"]
