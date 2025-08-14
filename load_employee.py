@@ -15,7 +15,7 @@ async def get_db(db_name="employee_db"):
     connection_string=f"mongodb+srv://durba028:{password}@tuitorial.s0vgcnr.mongodb.net/"
     client = AsyncMongoClient(connection_string)
     db = client[db_name]
-    await db.employee.create_index([("emp_id",1)],unique=True)
+    await db.employee.create_index([("emp_id",1)],unique=True)   #Create index for emp_id
     logger.info("Connected to MongoDB")
     return db,client
   except Exception as e:
