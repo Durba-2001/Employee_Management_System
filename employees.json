@@ -1,0 +1,74 @@
+[
+    {
+        "emp_id": 1,
+        "name": "Bov Doe",
+        "email": "johndoe100@hotmail.com",
+        "salary": 75000.0,
+        "address": "123 Main St, City",
+        "dob": "15-05-1990",
+        "department": "IT"
+    },
+    {
+        "emp_id": 2,
+        "name": "Jane Smith",
+        "email": "jsmith1989@gmail.com",
+        "salary": 60000.0,
+        "address": "456 Oak Ave, Town",
+        "dob": "22-11-1985",
+        "department": "HR"
+    },
+    {
+        "emp_id": 3,
+        "name": "Carol White",
+        "email": "carolwhite@gmail.com",
+        "salary": 85000.0,
+        "address": "789 Pine Lane, Chicago, IL",
+        "dob": "17-08-2001",
+        "department": "IT"
+    },
+    {
+        "emp_id": 4,
+        "name": "John Malan",
+        "email": "evedavis234@gmail.com",
+        "salary": 78000.0,
+        "address": "654 Cedar Street Phoenix, AZ",
+        "dob": "17-08-2000",
+        "department": "HR"
+    },
+    {
+        "emp_id": 5,
+        "name": "Irene Clark",
+        "email": "irene123@gmail.com",
+        "salary": 45000.0,
+        "address": "707 Redwood Lane, Jacksonville, FL",
+        "dob": "15-04-1995",
+        "department": "IT"
+    },
+    {
+        "emp_id": 6,
+        "name": "David Malan",
+        "email": "davidmalan456@gmail.com",
+        "salary": 78000.0,
+        "address": "606 xyz street",
+        "dob": "17-05-1998",
+        "department": "HR"
+    },
+    {
+        "emp_id": 7,
+        "name": "john",
+        "email": "john@gmail.com",
+        "salary": 45000.0,
+        "address": "xyz street",
+        "dob": "17-08-2000",
+        "department": "HR"
+    },
+    {
+        "emp_id": 9,
+        "name": "david",
+        "email": "david@yahoo.com",
+        "salary": 78000.0,
+        "address": "23park street",
+        "dob": "19-02-1963",
+        "department": "IT"
+    }
+]

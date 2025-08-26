@@ -1,121 +1,94 @@
-from pymongo import AsyncMongoClient
-import os
-from add_employee import create_employee
-from dotenv import load_dotenv,find_dotenv
-import pytest
+import json
+from add_employee import add_employee
+def set_upfile(temp_path):
+   initial_data = [
+        {"emp_id": 1, "name": "Alice", "email": "alice@example.com", "salary": 50000,
+         "address": "123 A St", "dob": "01-01-1990", "department": "IT"}
+    ]
+   file = temp_path / "emp.json"
+   file.write_text(json.dumps(initial_data))
+   return file
 
-async def get_test_db():
-    load_dotenv(find_dotenv())
-    password=os.environ.get("MongoDB_password")
-    connection_string=f"mongodb+srv://durba028:{password}@tuitorial.s0vgcnr.mongodb.net/"
-    client=AsyncMongoClient(connection_string)
-    db=client["test_employee_db"]
-    return db,client
-async def set_up_collections(db):
-    await db.employee.delete_many({})
-    initial_data={
-        
-        "emp_id": 1,
-        "emp_name": "Alice",
-        "emp_email": "alice@example.com",
-        "emp_salary": 50000,
-        "emp_address": "123 A St",
-        "emp_dob": "01-01-1990",
-        "emp_department": "IT"
-    }
-    
-    await db.employee.insert_one(initial_data)
-
-@pytest.mark.asyncio
-async def test_add_employee():
-    db,client= await get_test_db()
-    
-    await set_up_collections(db)
-    
+def test_add_employee(tmp_path):
+    file = set_upfile(tmp_path)
     valid_emp = {
-        "emp_id": 2, 
-        "emp_name": "Bob", 
-        "emp_email": "bob@example.com", 
-        "emp_salary": 60000,
-        "emp_address": "456 B Ave", 
-        "emp_dob": "02-02-1982", 
-        "emp_department": "HR"
+        "emp_id": 2, "name": "Bob", "email": "bob@example.com", "salary": 60000,
+        "address": "456 B Ave", "dob": "02-02-1982", "department": "HR"
     }
-    result_valid = await create_employee(db, valid_emp)
-    assert result_valid is True
-    added = await db.employee.find_one({"emp_email": "bob@example.com"})
-    
-    assert added is not None
-    
-    assert added["emp_name"]=="Bob"
-    assert added["emp_email"]=="bob@example.com"
-    assert added["emp_salary"]==60000
-    assert added["emp_address"]=="456 B Ave"
-    assert added["emp_dob"]=="02-02-1982"
-    assert added["emp_department"]=="HR"
-    await client.drop_database("test_employee_db")
+    result_valid = add_employee(str(file), valid_emp)
 
-@pytest.mark.asyncio
+    updated = json.loads(file.read_text())
+    added=updated[-1]
+    print("Added employees:: ",json.dumps(added,indent=4))
+    assert result_valid == True
+    assert added["emp_id"]==2
+    assert added["name"]=="Bob"
+    assert added["email"]=="bob@example.com"
+    assert added["salary"]==60000
+    assert added["address"]=="456 B Ave"
+    assert added["dob"]=="02-02-1982"
+    assert added["department"]=="HR"
+    
+def test_duplicate_employee_id(tmp_path):
+    file = set_upfile(tmp_path)
+    valid_emp = {
+        "emp_id": 2, "name": "Bob", "email": "bob@example.com", "salary": 60000,
+        "address": "456 B Ave", "dob": "02-02-1982", "department": "HR"
+    }
+    invalid_emp = {
+        "emp_id": 2, "name": "john", "email": "john@example.com", "salary": 70000,
+        "address": "789 C Rd", "dob": "03-03-1985", "department": "Finance"
+    }
 
-async def test_invalid_name():
-    db,client= await get_test_db()
-    await set_up_collections(db)
+    add_employee(str(file), valid_emp)
+
+    updated = json.loads(file.read_text())
+    result_invalid = add_employee(str(file), invalid_emp)
+    assert result_invalid == True
+    updated = json.loads(file.read_text())
+    assert len(updated) == 2
+
+def test_invalid_name(tmp_path):
+    file = set_upfile(tmp_path)
     
     invalid_emp = {
-          "emp_name": "john123", "emp_email": "john@example.com", "emp_salary": 70000,
-         "emp_address": "789 C Rd", "emp_dob": "03-03-1985", "emp_department": "Finance"
-     }
-    
-    result_invalid = await create_employee(db,invalid_emp)
-    assert result_invalid is False
-    
-    assert await db.employee.count_documents({}) == 1
-    await client.drop_database("test_employee_db")
+        "emp_id": 3, "name": "john123", "email": "john@example.com", "salary": 70000,
+        "address": "789 C Rd", "dob": "03-03-1985", "department": "Finance"
+    }
+    result_invalid = add_employee(str(file), invalid_emp)
+    assert result_invalid == False
+    updated = json.loads(file.read_text())
+    assert len(updated) == 1
 
-@pytest.mark.asyncio
-async def test_invalid_email():
-    db,client= await get_test_db()
-    await set_up_collections(db)
-    
+def test_invalid_email(tmp_path):
+    file = set_upfile(tmp_path)
     invalid_emp = {
-          "emp_name": "john", "emp_email": "john@example", "emp_salary": 70000,
-         "emp_address": "789 C Rd", "emp_dob": "03-03-1985", "emp_department": "Finance"
-     }
-    
-    result_invalid = await create_employee(db,invalid_emp)
-    assert result_invalid is False
-    
-    assert await db.employee.count_documents({}) == 1
-    await client.drop_database("test_employee_db")
+        "emp_id": 3, "name": "john", "email": "john@example", "salary": 70000,
+        "address": "789 C Rd", "dob": "03-03-1985", "department": "Finance"
+    }
+    result_invalid = add_employee(str(file), invalid_emp)
+    assert result_invalid == False
+    updated = json.loads(file.read_text())
+    assert len(updated) == 1
 
-@pytest.mark.asyncio
-async def test_negative_salary():
-    db,client= await get_test_db()
-    await set_up_collections(db)
-    
+def test_negative_salary(tmp_path):
+    file = set_upfile(tmp_path)
     invalid_emp = {
-          "emp_name": "john", "emp_email": "john@example.com", "emp_salary": -70000,
-         "emp_address": "789 C Rd", "emp_dob": "03-03-1985", "emp_department": "Finance"
-     }
-    
-    result_invalid = await create_employee(db,invalid_emp)
-    assert result_invalid is False
-    
-    assert await db.employee.count_documents({}) == 1
-    await client.drop_database("test_employee_db")
+        "emp_id": 3, "name": "john", "email": "john@example.com", "salary": -70000,
+        "address": "789 C Rd", "dob": "03-03-1985", "department": "Finance"
+    }
+    result_invalid = add_employee(str(file), invalid_emp)
+    assert result_invalid == False
+    updated = json.loads(file.read_text())
+    assert len(updated) == 1
 
-@pytest.mark.asyncio
-async def test_invalid_dob():
-    db,client= await get_test_db()
-    await set_up_collections(db)
-    
+def test_invalid_dob(tmp_path):
+    file = set_upfile(tmp_path)
     invalid_emp = {
-          "emp_name": "john", "emp_email": "john@example.com", "emp_salary": 70000,
-         "emp_address": "789 C Rd", "emp_dob": "1985-08-20", "emp_department": "Finance"
-     }
-    
-    result_invalid = await create_employee(db,invalid_emp)
-    assert result_invalid is False
-    
-    assert await db.employee.count_documents({}) == 1
-    await client.drop_database("test_employee_db")
+        "emp_id": 3, "name": "john", "email": "john@example.com", "salary": 70000,
+        "address": "789 C Rd", "dob": "2000-04-28", "department": "Finance"
+    }
+    result_invalid = add_employee(str(file), invalid_emp)
+    assert result_invalid == False
+    updated = json.loads(file.read_text())
+    assert len(updated) == 1
