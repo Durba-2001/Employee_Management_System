@@ -1,27 +1,41 @@
-from validity import *
+import json 
+from load_employee import load_employee
+from validity import email_valid,dob_valid,name_valid
 from loguru import logger
-from load_employee import get_next_empId
 
-async def create_employee(db,emp):
-  try:
-    collections=db["employee"]
-    emp["emp_id"]= await get_next_empId(db)
+
+def add_employee(fp,emp_data):
+    employees=load_employee(fp)
+    try:  
+        emp_id=emp_data["emp_id"]
+        for e in employees:
+            if e["emp_id"]==emp_id:
+                logger.warning(f"Attempting to add existing employee with ID{emp_id}")
+                return True
+        name=emp_data["name"]
+        if not name_valid(name):
+            logger.error(f"Invalid Name format entered for employee ID{emp_id} : {name}")   
+            return False
+        email=emp_data["email"]
+        if not email_valid(email):
+            logger.error(f"Invalid email format entered for employee ID{emp_id} : {email}")   
+            return False
+        salary=emp_data["salary"]
+        if salary<0:
+            logger.error(f"Negative salary entered for employee ID{emp_id} : {salary}")
+            return False
+      
+        dob=emp_data["dob"]
+        if not dob_valid(dob):
+            logger.error(f"Invalid DOB format entered for employee ID{emp_id} : {dob}")
     
-    
-    if not name_valid(emp["emp_name"]):
-      logger.error(f"Input invalid name with id: {emp['emp_id']}")
-      return False
-    if not email_valid(emp["emp_email"]):
-      logger.error(f"Input invalid email with id: {emp['emp_id']}")
-      return False
-    if not dob_valid(emp['emp_dob']):
-      logger.error(f"Input invalid DOB with id: {emp['emp_id']}")
-      return False
-    if emp["emp_salary"]<0:
-      logger.error(f"Input invalid salary with id: {emp['emp_id']}")
-      return False
-    await collections.insert_one(emp)
-    logger.success("Employee Added successfully")
-    return True
-  except Exception as e:
-    logger.error(f"Error adding employee: {e}")
+            return False    
+        employees.append(emp_data)
+        with open(fp,"w") as f:
+            json.dump(employees,f,indent=4)
+        logger.success(f"Successfully added new employee with id :: {emp_id}")
+        
+        return True
+    except ValueError:
+        logger.error("Invalid input during add operation.")
+        

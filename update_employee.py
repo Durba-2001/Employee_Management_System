@@ -1,48 +1,57 @@
-from validity import *
+import json
+from load_employee import load_employee
+from validity import email_valid,dob_valid,name_valid
 from loguru import logger
-async def update_employee(db,emp_id,update_data):
-  try:
-    
-    collections=db["employee"]
-    emp=await collections.find_one({"emp_id":emp_id})
-    if emp:
-      logger.info(f"Attempting to update employee with id {emp_id}")
-      for key,value in update_data.items():
-        if key=="emp_name":
-          if not name_valid(value):
-            logger.error(f"Invalid Name with Id {emp_id}")
-            return False
-          await collections.update_one({"emp_id":emp_id},{"$set":{"emp_name":value}})
-          logger.success(f"Updating name for employee with id {emp_id}")
-        if key=="emp_email":
-          if not email_valid(value):
-            logger.error(f"Invalid Email with Id {emp_id}")
-            return False
-          await collections.update_one({"emp_id":emp_id},{"$set":{"emp_email":value}})
-          logger.success(f"Updating email for employee with id {emp_id}")
-        if key=="emp_salary":
-          salary=float(value)
-          if salary<0:
-            logger.error(f"Negative Salary entered during update for employee with Id {emp_id}")
-            return False
-          await collections.update_one({"emp_id":emp_id},{"$set":{"emp_salary":salary}})
-          logger.success(f"Updating salary for employee with id {emp_id}")
-        if key=="emp_address":
-          await collections.update_one({"emp_id":emp_id},{"$set":{"emp_address":value}})
-          logger.success(f"Updating address for employee with id {emp_id}")
-        if key=="emp_dob":
-          if not dob_valid(value):
-            logger.error(f"Invalid DOB with Id {emp_id}")
-            return False
-          await collections.update_one({"emp_id":emp_id},{"$set":{"emp_dob":value}})
-          logger.success(f"Updating dob for employee with id {emp_id}")
-        if key=="emp_department":
-          await collections.update_one({"emp_id":emp_id},{"$set":{"emp_department":value}})
-          logger.success(f"Updating department for employee with id {emp_id}")
-      logger.success(f"Employee with id {emp_id} updated successfully")
-      return True
-    logger.error(f"Employee with id {emp_id} not found")
-    return False
-  except Exception as e:
-    logger.error(f"Error updating employee: {e}")
-    return False
+def update_employee(fp,emp_id,update_data):
+    employees=load_employee(fp)
+    try:
+        for emp in employees:
+            if emp["emp_id"] == emp_id:
+                logger.info(f"Attempting to update employee details with ID{emp_id}")
+                if "8" in update_data.keys():
+                    logger.info(f"Update cancel with employee ID {emp_id}")
+                    return 1
+                for key,value in update_data.items():
+                    if key=="name":
+                        emp["name"] = value
+                        if not name_valid(emp["name"]):
+                            logger.error(f"Invalid name format entered during update for for employee ID {emp_id}:{emp["name"]}")
+                            return 1
+                        logger.info(f"Updated name for employee ID {emp_id}")
+                    if key=="email":
+                        emp["email"] =value          
+                        if not email_valid(emp["email"]):
+                            logger.error(f"Invalid email format entered during update for employee ID {emp_id}: {emp['email']}")
+                            
+                            return 1
+                        logger.info(f"Updated email for employee ID {emp_id}")
+                    if key=="salary":
+                        emp["salary"] = float(value)
+                        if emp["salary"] < 0:
+                            logger.error(f"Negative salary entered during update for employee ID {emp_id}: {emp['salary']}")
+                         
+                            return 1
+                        logger.info(f"Updated salary for employee ID {emp_id}")
+                    if key=="address":
+                        emp["address"] = value
+                        logger.info(f"Updated address for employee ID {emp_id}")
+                    if key=="dob":
+                        emp["dob"] = value
+                        if not dob_valid(emp["dob"]):
+                            logger.error(f"Invalid DOB format entered during update for employee ID {emp_id}: {emp['dob']}")
+                            return 1
+                        logger.info(f"Updated dob for employee ID {emp_id}")
+                    if key=="department":
+                        emp["department"] = value
+                        logger.info(f"Updated department for employee ID {emp_id}")
+                    
+                
+                with open(fp, "w") as f:
+                    json.dump(employees, f, indent=4)
+                logger.success(f"Successfully updated the details of employee with ID{emp_id}")
+                return 0
+        logger.error(f"Employee with ID {emp_id} not found during updating operation.")
+        return -1
+    except ValueError:
+        logger.error("Invalid input while reading operation.")
+        

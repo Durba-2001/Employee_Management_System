@@ -1,5 +1,5 @@
 def take_input():
-    
+    emp_id = int(input("Enter the Employee Id:: "))
     emp_name = input("Enter Employee Name:: ")
     email = input("Enter Employee email:: ")
     salary = float(input("Enter Employee Salary:: "))
@@ -7,12 +7,12 @@ def take_input():
     dob = input("Enter employee date of birth:: ")
     department = input("Enter employee department:: ")
     new_emp = {
-    
-        "emp_name": emp_name,
-        "emp_email": email,
-        "emp_salary": salary,
-        "emp_address": address,
-        "emp_dob": dob,
-        "emp_department": department
+        "emp_id": emp_id,
+        "name": emp_name,
+        "email": email,
+        "salary": salary,
+        "address": address,
+        "dob": dob,
+        "department": department
     }
     return new_emp
